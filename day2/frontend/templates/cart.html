@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - E-Store{% endblock %}
+
+{% block styles %}
+<style>
+    .cart-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .cart-items {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-info h3 {
+        margin-bottom: 0.25rem;
+    }
+
+    .item-info p {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .item-price {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .remove-btn {
+        background-color: #dc3545;
+        color: white;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .remove-btn:hover {
+        background-color: #c82333;
+    }
+
+    .cart-summary {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        height: fit-content;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .summary-row:last-of-type {
+        border-bottom: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #ff9900;
+        margin-bottom: 1.5rem;
+    }
+
+    .checkout-btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+    }
+
+    .empty-cart a {
+        color: #ff9900;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+        .cart-container {
+            grid-template-columns: 1fr;
+        }
+
+        .cart-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .remove-btn {
+            margin-top: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>Shopping Cart</h2>
+
+{% if items %}
+<div class="cart-container">
+    <div class="cart-items">
+        {% for item in items %}
+        <div class="cart-item">
+            <div class="item-info">
+                <h3>{{ item.product_name }}</h3>
+                <p>Quantity: {{ item.quantity }} × ${{ "%.2f"|format(item.price_at_time) }}</p>
+            </div>
+            <div style="flex-grow: 1; text-align: right;">
+                <div class="item-price">${{ "%.2f"|format(item.price_at_time * item.quantity) }}</div>
+            </div>
+            <button class="remove-btn" onclick="removeFromCart('{{ item.product_id }}')">Remove</button>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="cart-summary">
+        <div class="summary-row">
+            <span>Subtotal:</span>
+            <span>${{ "%.2f"|format(total * 0.95) }}</span>
+        </div>
+        <div class="summary-row">
+            <span>Estimated Tax:</span>
+            <span>${{ "%.2f"|format(total * 0.05) }}</span>
+        </div>
+        <div class="total-row">
+            <span>Total:</span>
+            <span>${{ "%.2f"|format(total) }}</span>
+        </div>
+        <a href="/checkout" style="display: block; text-decoration: none;">
+            <button class="checkout-btn">Proceed to Checkout →</button>
+        </a>
+        <a href="/" style="display: block; text-align: center; margin-top: 1rem; color: #ff9900; text-decoration: none;">Continue Shopping</a>
+    </div>
+</div>
+
+{% else %}
+<div class="empty-cart">
+    <p>Your cart is empty 🛒</p>
+    <a href="/">Start shopping →</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function removeFromCart(productId) {
+        if (confirm('Remove this item from cart?')) {
+            fetch(`/api/cart/remove/${productId}`, {method: 'DELETE'})
+                .then(r => r.json())
+                .then(() => location.reload())
+                .catch(e => alert('Error: ' + e));
+        }
+    }
+</script>
+{% endblock %}

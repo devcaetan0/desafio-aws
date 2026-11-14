@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - E-Store{% endblock %}
+
+{% block styles %}
+<style>
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .checkout-form {
+        background-color: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .order-summary {
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        height: fit-content;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .summary-item:last-of-type {
+        border-bottom: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #ff9900;
+        margin-bottom: 1.5rem;
+    }
+
+    .place-order-btn {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    .required {
+        color: #dc3545;
+    }
+
+    @media (max-width: 768px) {
+        .checkout-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>Checkout</h2>
+
+<div class="checkout-container">
+    <div class="checkout-form">
+        <h3>Order Information</h3>
+        <form id="checkoutForm">
+            <div class="form-group">
+                <label for="customer_id">Customer ID <span class="required">*</span></label>
+                <input type="text" id="customer_id" name="customer_id" value="cust_001" required>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Full Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address <span class="required">*</span></label>
+                <input type="text" id="address" name="address" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+        </form>
+    </div>
+
+    <div class="order-summary">
+        <h3>Order Summary</h3>
+
+        {% for item in items %}
+        <div class="summary-item">
+            <div>
+                <strong>{{ item.product_name }}</strong>
+                <div style="font-size: 0.9rem; color: #666;">
+                    {{ item.quantity }} × ${{ "%.2f"|format(item.price_at_time) }}
+                </div>
+            </div>
+            <div style="font-weight: bold;">
+                ${{ "%.2f"|format(item.price_at_time * item.quantity) }}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="total-row">
+            <span>Total:</span>
+            <span>${{ "%.2f"|format(total) }}</span>
+        </div>
+
+        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
+        <a href="/cart" style="display: block; text-align: center; margin-top: 1rem; color: #ff9900; text-decoration: none;">← Back to Cart</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function placeOrder() {
+        const form = document.getElementById('checkoutForm');
+        if (!form.checkValidity()) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+
+        fetch('/checkout', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(r => r.text())
+        .then(html => {
+            document.body.innerHTML = html;
+        })
+        .catch(e => alert('Error: ' + e));
+    }
+</script>
+{% endblock %}
